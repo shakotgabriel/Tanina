@@ -1,0 +1,21 @@
+{
+    "name": "Tanina Financial Platform",
+    "short_name": "Tanina",
+    "description": "Seamlessly integrate mobile money and digital banking.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#4caf50",
+    "icons": [
+        {
+            "src": "/images/taninalogo.png",
+            "sizes": "192x192",
+            "type": "images/taninalogo.png"
+        },
+        {
+            "src": "/images/taninalogo.png",
+            "sizes": "512x512",
+            "type": "images/taninalogo.png"
+        }
+    ]
+}
