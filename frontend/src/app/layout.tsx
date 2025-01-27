@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-
+import { NavigationBar } from "@/components/NavigationBar";
 import "./globals.css";
-
-
 
 export const metadata: Metadata = {
   title: "Tanina - Digital Payment Platform",
@@ -29,14 +27,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-      <meta name="apple-mobile-web-app-capable" content="yes" />
-      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-      <meta name="theme-color" content="#166534" />
-      <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
-    </head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="theme-color" content="#166534" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+      </head>
       <body>
         <div className="mobile-container">{children}</div>
-        
+        <NavigationBar />
       </body>
     </html>
   );
