@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
+import { Outfit } from "next/font/google"
+import "./globals.css"
+import { cn } from "@/lib/utils"
+// import { usePathname } from "next/navigation"
 import { NavigationBar } from "@/components/NavigationBar";
-import "./globals.css";
+
+const outfit = Outfit({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Tanina - Digital Payment Platform",
@@ -19,23 +24,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  //const pathname = usePathname()
+  //const showNavigation = !["/login", "/signup", "/forgot-password"].includes(pathname)
+
   return (
     <html lang="en">
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="theme-color" content="#166534" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
-      <body>
-        <div className="mobile-container">{children}</div>
-        <NavigationBar />
+      <body className={cn(outfit.className, "min-h-screen bg-background")}>
+        <main className="flex flex-col min-h-screen">
+          <div className="mobile-container">{children}</div>
+          <NavigationBar />
+        </main>
       </body>
     </html>
-  );
+  )
 }
