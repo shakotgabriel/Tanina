@@ -13,7 +13,7 @@ const depositMethods = [
     id: 'mobile_money',
     name: 'Mobile Money',
     icon: <Phone className="h-5 w-5" />,
-    description: 'MTN, Airtel Money',
+    description: 'MTN MOMO, MGURUSH ',
     color: 'text-yellow-500',
     bgColor: 'bg-yellow-500/10'
   },
@@ -139,8 +139,8 @@ export default function DepositPage() {
                       className="bg-muted border-0 rounded-xl"
                     />
                     <div className="flex gap-2 mt-4">
-                      <Button className="flex-1 h-12" variant="outline">MTN Money</Button>
-                      <Button className="flex-1 h-12" variant="outline">Airtel Money</Button>
+                      <Button className="flex-1 h-12" variant="outline">MTN MOMO Money</Button>
+                      <Button className="flex-1 h-12" variant="outline">MGURUSH Money</Button>
                     </div>
                   </div>
                 )}
