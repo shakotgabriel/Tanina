@@ -4,24 +4,87 @@
 
 /* globals.css */
 html {
-    height: -webkit-fill-available;
-   }
-   
-   body {
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    overscroll-behavior: none;
-    height: 100vh;
-    height: -webkit-fill-available;
-   }
-   
-   .mobile-container {
-    height: 100vh;
-    height: -webkit-fill-available;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    position: fixed;
-    width: 100%;
-    top: 0;
-    left: 0;
-   }
+  height: -webkit-fill-available;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
+  height: 100vh;
+  height: -webkit-fill-available;
+}
+
+.mobile-container {
+  height: 100vh;
+  height: -webkit-fill-available;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+
+@layer base {
+  :root {
+    /* Primary Growth Green (Accessible & Culturally Familiar) */
+    --primary: 142 56% 46%;
+    /* Vibrant green that works on low-resolution screens */
+    --primary-foreground: 0 0% 98%;
+
+    /* Secondary Earth Gold (Warm accent for trust) */
+    --secondary: 38 89% 54%;
+    /* Golden yellow for attention elements */
+    --secondary-foreground: 0 0% 20%;
+
+    /* Updated Supporting Colors */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --muted: 120 10% 95%;
+    /* Soft green-gray for backgrounds */
+    --muted-foreground: 0 0% 45%;
+    --accent: 142 30% 88%;
+    /* Light green for subtle accents */
+    --accent-foreground: 142 56% 46%;
+    --destructive: 0 84% 60%;
+
+    /* Chart Colors with Better Differentiation */
+    --chart-1: 142 56% 46%;
+    /* Primary green */
+    --chart-2: 38 89% 54%;
+    /* Secondary gold */
+    --chart-3: 197 37% 24%;
+    /* Dark blue for contrast */
+    --chart-4: 43 74% 66%;
+    /* Warm yellow */
+    --chart-5: 27 87% 67%;
+    /* Terracotta orange */
+  }
+
+  .dark {
+    /* High-Contrast Dark Mode */
+    --primary: 142 56% 36%;
+    /* Slightly darker green */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 38 89% 44%;
+    /* Deep gold */
+    --secondary-foreground: 0 0% 98%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 90%;
+    --muted: 120 10% 15%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 142 30% 20%;
+    --accent-foreground: 142 56% 36%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
