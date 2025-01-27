@@ -2,4 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
-
+/* globals.css */
+html {
+    height: -webkit-fill-available;
+   }
+   
+   body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
+    height: 100vh;
+    height: -webkit-fill-available;
+   }
+   
+   .mobile-container {
+    height: 100vh;
+    height: -webkit-fill-available;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+   }
