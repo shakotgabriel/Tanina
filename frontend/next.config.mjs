@@ -4,19 +4,14 @@ const config = withPWA({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: 'no',
-    viewportFit: 'cover',
-    orientation: 'portrait'
-  }
+  disable: process.env.NODE_ENV === 'development',
+  // Remove viewport configuration from here as it belongs in layout.tsx
 })({
-  pwa: {
-    dest: 'public',
-    register: true,
-    skipWaiting: true,
+  // Remove nested pwa configuration
+  // Add other Next.js configurations here
+  reactStrictMode: true,
+  experimental: {
+    turbo: true
   }
 });
 
