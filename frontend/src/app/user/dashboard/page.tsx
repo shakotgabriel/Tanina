@@ -125,7 +125,7 @@ export default function MobileDashboardPage() {
             <div className="w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center">
               <MoreHorizontal className="h-5 w-5 text-chart-4" />
             </div>
-            <span className="text-sm text-foreground">More</span>
+            <span className="text-sm text-foreground">Payments</span>
           </Button>
         </div>
 
