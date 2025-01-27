@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowUpRight, Handshake, Receipt, MoreHorizontal, Search, Bell, Plus, ArrowRight } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useRouter } from "next/navigation"
 
 const recentBills = [
   {
@@ -28,6 +29,8 @@ const recentBills = [
 ]
 
 export default function MobileDashboardPage() {
+  const router = useRouter()
+
   return (
     <ScrollArea className="h-screen">
       <div className="p-6 space-y-6 bg-background min-h-screen">
@@ -59,7 +62,10 @@ export default function MobileDashboardPage() {
             <h2 className="text-sm text-primary-foreground/80 mb-2">Your Balance</h2>
             <div className="flex items-center justify-between">
               <p className="text-3xl font-bold">2,588.00 USD</p>
-              <Button className="bg-background text-foreground hover:bg-accent rounded-xl">
+              <Button 
+                className="bg-background text-foreground hover:bg-accent rounded-xl"
+                onClick={() => router.push('/user/wallet/deposit')}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Top Up
               </Button>
@@ -91,6 +97,7 @@ export default function MobileDashboardPage() {
           <Button
             variant="ghost"
             className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
+            onClick={() => router.push('/user/wallet/transfer')}
           >
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <ArrowUpRight className="h-5 w-5 text-primary" />
@@ -101,6 +108,7 @@ export default function MobileDashboardPage() {
           <Button
             variant="ghost"
             className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
+            onClick={() => router.push('/user/wallet/withdraw')}
           >
             <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
               <Handshake className="h-5 w-5 text-secondary" />
@@ -111,6 +119,7 @@ export default function MobileDashboardPage() {
           <Button
             variant="ghost"
             className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
+            onClick={() => router.push('/user/wallet/payments')}
           >
             <div className="w-10 h-10 rounded-lg bg-chart-3/10 flex items-center justify-center">
               <Receipt className="h-5 w-5 text-chart-3" />
@@ -121,6 +130,7 @@ export default function MobileDashboardPage() {
           <Button
             variant="ghost"
             className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
+            onClick={() => router.push('/user/more')}
           >
             <div className="w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center">
               <MoreHorizontal className="h-5 w-5 text-chart-4" />
@@ -133,7 +143,12 @@ export default function MobileDashboardPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Recent Bills</h2>
-            <Button variant="ghost" size="sm" className="rounded-full hover:bg-muted/80 shadow-sm border border-border/5">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="rounded-full hover:bg-muted/80 shadow-sm border border-border/5"
+              onClick={() => router.push('/user/bills')}
+            >
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
