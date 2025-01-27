@@ -105,7 +105,7 @@ export default function MobileDashboardPage() {
             <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
               <Handshake className="h-5 w-5 text-secondary" />
             </div>
-            <span className="text-sm text-foreground">Request</span>
+            <span className="text-sm text-foreground">Withdraw</span>
           </Button>
 
           <Button
@@ -115,7 +115,7 @@ export default function MobileDashboardPage() {
             <div className="w-10 h-10 rounded-lg bg-chart-3/10 flex items-center justify-center">
               <Receipt className="h-5 w-5 text-chart-3" />
             </div>
-            <span className="text-sm text-foreground">Split Bill</span>
+            <span className="text-sm text-foreground">Payments</span>
           </Button>
 
           <Button
@@ -125,7 +125,7 @@ export default function MobileDashboardPage() {
             <div className="w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center">
               <MoreHorizontal className="h-5 w-5 text-chart-4" />
             </div>
-            <span className="text-sm text-foreground">Payments</span>
+            <span className="text-sm text-foreground">More</span>
           </Button>
         </div>
 
