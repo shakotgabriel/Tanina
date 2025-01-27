@@ -1,6 +1,7 @@
 "use client"
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -23,6 +24,7 @@ interface UserProfile {
 }
 
 export default function Profile() {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
@@ -37,19 +39,54 @@ export default function Profile() {
     idNumber: 'ID123456'
   });
 
-  const handleLogout = () => {
-    // Add logout logic here
-    console.log('Logging out...');
+  const handleLogout = async () => {
+    try {
+      // Add actual logout API call here
+      console.log('Logging out...');
+      // Example: await auth.signOut();
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      setStatus('error');
+    }
+  };
+
+  const handleHelpCenter = () => {
+    try {
+      router.push('/Help-center');
+    } catch (error) {
+      console.error('Navigation failed:', error);
+      setStatus('error');
+    }
+  };
+
+  const handleMessageCenter = () => {
+    try {
+      router.push('/messages');
+    } catch (error) {
+      console.error('Navigation failed:', error);
+      setStatus('error');
+    }
+  };
+
+  const handlePrivacySettings = () => {
+    try {
+      router.push('/privacy');
+    } catch (error) {
+      console.error('Navigation failed:', error);
+      setStatus('error');
+    }
   };
 
   const handleSave = async () => {
     setStatus('loading');
     try {
-      // API call here
+      // Add actual API call here
       await new Promise(resolve => setTimeout(resolve, 1000));
       setStatus('success');
       setIsEditing(false);
     } catch (error) {
+      console.error('Save failed:', error);
       setStatus('error');
     }
   };
@@ -69,9 +106,6 @@ export default function Profile() {
         <p className="text-green-600">Personal Profile</p>
       </div>
 
-      {/* Profile Information */}
-      {/* ... (previous profile information card remains the same) ... */}
-
       {/* Help & Support */}
       <Card className="border-green-100">
         <CardHeader>
@@ -80,7 +114,7 @@ export default function Profile() {
         <CardContent className="space-y-4">
           <button 
             className="w-full flex items-center justify-between p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            onClick={() => window.location.href = '/help-center'}
+            onClick={handleHelpCenter}
           >
             <div className="flex items-center space-x-3">
               <HelpCircle className="w-5 h-5 text-green-600" />
@@ -94,7 +128,7 @@ export default function Profile() {
 
           <button 
             className="w-full flex items-center justify-between p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            onClick={() => window.location.href = '/messages'}
+            onClick={handleMessageCenter}
           >
             <div className="flex items-center space-x-3">
               <MessageSquare className="w-5 h-5 text-green-600" />
@@ -116,7 +150,7 @@ export default function Profile() {
         <CardContent className="space-y-4">
           <button 
             className="w-full flex items-center justify-between p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            onClick={() => window.location.href = '/privacy'}
+            onClick={handlePrivacySettings}
           >
             <div className="flex items-center space-x-3">
               <Shield className="w-5 h-5 text-green-600" />
