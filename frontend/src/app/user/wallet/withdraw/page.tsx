@@ -1,125 +1,151 @@
-"use client";
+"use client"
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React, { useState } from 'react'
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Input } from "@/components/ui/input"
+import { ArrowLeft, Building2, Phone, Wallet } from "lucide-react"
+import { useRouter } from 'next/navigation'
 
-interface WithdrawFormData {
-  amount: string;
-  method: 'mobile_money' | 'bank_account';
-  accountNumber: string;
-}
+const withdrawMethods = [
+  {
+    id: 'bank',
+    name: 'Bank Account',
+    icon: <Building2 className="h-5 w-5" />,
+    description: 'Withdraw to your bank account'
+  },
+  {
+    id: 'mobile',
+    name: 'Mobile Money',
+    icon: <Phone className="h-5 w-5" />,
+    description: 'Withdraw to mobile money'
+  },
+  {
+    id: 'agent',
+    name: 'Tanina Agent',
+    icon: <Wallet className="h-5 w-5" />,
+    description: 'Withdraw from nearby agent'
+  }
+];
 
-export default function WithdrawForm() {
-  const [formData, setFormData] = useState<WithdrawFormData>({
-    amount: '',
-    method: 'mobile_money',
-    accountNumber: ''
-  });
-  const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+export default function WithdrawPage() {
+  const router = useRouter()
+  const [step, setStep] = useState(1)
+  const [method, setMethod] = useState('')
+  const [amount, setAmount] = useState('')
+  const [status, setStatus] = useState<'idle' | 'processing'>('idle')
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setStatus('processing');
-    try {
-      // API call here
-      setStatus('success');
-    } catch (error) {
-      setStatus('error');
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleWithdraw = async () => {
+    setStatus('processing')
+    setTimeout(() => {
+      setStatus('idle')
+      router.push('/success')
+    }, 2000)
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Withdraw Funds</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Amount</label>
-            <Input
-              name="amount"
-              type="number"
-              placeholder="Enter amount"
-              value={formData.amount}
-              onChange={handleChange}
-              required
-              min="0"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Withdrawal Method</label>
-            <select
-              name="method"
-              value={formData.method}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              required
-            >
-              <option value="mobile_money">Mobile Money</option>
-              <option value="bank_account">Bank Account</option>
-            </select>
-          </div>
-
-          {formData.method === 'mobile_money' && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Phone Number</label>
-              <Input
-                name="accountNumber"
-                placeholder="Enter phone number"
-                value={formData.accountNumber}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          )}
-
-          {formData.method === 'bank_account' && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Account Number</label>
-              <Input
-                name="accountNumber"
-                placeholder="Enter account number"
-                value={formData.accountNumber}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          )}
-
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={status === 'processing'}
+    <ScrollArea className="h-screen">
+      <div className="p-6 space-y-6 bg-background min-h-screen">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full w-10 h-10 border-0 bg-muted hover:bg-muted/80"
+            onClick={() => step > 1 ? setStep(step - 1) : router.back()}
           >
-            {status === 'processing' ? 'Processing...' : 'Withdraw'}
+            <ArrowLeft className="h-5 w-5 text-foreground" />
           </Button>
-        </form>
+          <h1 className="text-xl font-semibold text-foreground">Withdraw Money</h1>
+        </div>
 
-        {status === 'success' && (
-          <Alert className="mt-4 bg-green-50">
-            <AlertDescription>
-              Withdrawal request submitted successfully!
-            </AlertDescription>
-          </Alert>
+        {step === 1 && (
+          <div className="space-y-4">
+            <Card className="shadow-sm border-0 rounded-2xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Available Balance</p>
+                    <p className="text-2xl font-bold text-foreground">$2,588.00</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <h2 className="text-sm font-medium text-muted-foreground">Withdraw To</h2>
+            <div className="grid gap-4">
+              {withdrawMethods.map((method) => (
+                <Button
+                  key={method.id}
+                  variant="ghost"
+                  className="w-full bg-muted hover:bg-muted/80 rounded-2xl flex items-center gap-4 p-4 h-auto"
+                  onClick={() => {
+                    setMethod(method.id)
+                    setStep(2)
+                  }}
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    {method.icon}
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-foreground">{method.name}</p>
+                    <p className="text-sm text-muted-foreground">{method.description}</p>
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </div>
         )}
 
-        {status === 'error' && (
-          <Alert className="mt-4 bg-red-50">
-            <AlertDescription>
-              Failed to process withdrawal. Please try again.
-            </AlertDescription>
-          </Alert>
+        {step === 2 && (
+          <div className="space-y-6">
+            <Card className="shadow-sm border-0 rounded-2xl">
+              <CardContent className="p-6 space-y-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Amount</label>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    className="text-2xl font-bold h-16 bg-muted border-0 rounded-xl text-center"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                  />
+                  <p className="text-sm text-center text-muted-foreground">Available: $2,588.00</p>
+                </div>
+
+                {method === 'bank' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Bank Account</label>
+                    <Input
+                      placeholder="Enter account number"
+                      className="bg-muted border-0 rounded-xl"
+                    />
+                  </div>
+                )}
+
+                {method === 'mobile' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Mobile Number</label>
+                    <Input
+                      placeholder="Enter mobile number"
+                      className="bg-muted border-0 rounded-xl"
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Button
+              className="w-full h-12 rounded-xl"
+              disabled={!amount || status === 'processing'}
+              onClick={handleWithdraw}
+            >
+              {status === 'processing' ? 'Processing...' : 'Withdraw Money'}
+            </Button>
+          </div>
         )}
-      </CardContent>
-    </Card>
-  );
+      </div>
+    </ScrollArea>
+  )
 }
