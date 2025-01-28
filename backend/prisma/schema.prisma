@@ -8,61 +8,104 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  accounts  Account[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime? @updatedAt
+  id            Int       @id @default(autoincrement())
+  firstName     String
+  lastName      String
+  email         String    @unique
+  phoneNumber   String    @unique
+  password      String
+  role          UserRole  @default(USER)
+  isVerified    Boolean   @default(false)
+  accounts      Account[]
+  profile       Profile?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @updatedAt
+}
+
+model Profile {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @unique
+  user          User      @relation(fields: [userId], references: [id])
+  address       String?
+  dateOfBirth   DateTime?
+  nationality   String?
+  idNumber      String?   @unique
+  idType        IDType?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime? @updatedAt
 }
 
 model Account {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  balance   Float    @default(0.0)
-  debits    Debit[]
-  credits   Credit[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime? @updatedAt
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  user          User          @relation(fields: [userId], references: [id])
+  accountType   AccountType   @default(WALLET)
+  accountNumber String        @unique
+  balance       Float         @default(0.0)
+  currency      String        @default("SSP")
+  isActive      Boolean       @default(true)
+  debits        Debit[]
+  credits       Credit[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime?     @updatedAt
 }
 
 model Transaction {
-  id          Int      @id @default(autoincrement())
-  type        OperationType
-  status      TransactionStatus @default(PENDING)
-  debits      Debit[]
-  credits     Credit[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime? @updatedAt
+  id            Int               @id @default(autoincrement())
+  reference     String           @unique
+  type          OperationType
+  status        TransactionStatus @default(PENDING)
+  description   String?
+  debits        Debit[]
+  credits       Credit[]
+  metadata      Json?            // For additional transaction details
+  failureReason String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime?        @updatedAt
 }
 
 model Debit {
-  id          Int      @id @default(autoincrement())
-  amount      Float
-  accountId   Int
-  account     Account  @relation(fields: [accountId], references: [id])
+  id            Int          @id @default(autoincrement())
+  amount        Float
+  accountId     Int
+  account       Account      @relation(fields: [accountId], references: [id])
   transactionId Int
-  transaction Transaction @relation(fields: [transactionId], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime? @updatedAt
+  transaction   Transaction  @relation(fields: [transactionId], references: [id])
+  description   String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime?    @updatedAt
 }
 
 model Credit {
-  id          Int      @id @default(autoincrement())
-  amount      Float
-  accountId   Int
-  account     Account  @relation(fields: [accountId], references: [id])
+  id            Int          @id @default(autoincrement())
+  amount        Float
+  accountId     Int
+  account       Account      @relation(fields: [accountId], references: [id])
   transactionId Int
-  transaction Transaction @relation(fields: [transactionId], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime? @updatedAt
+  transaction   Transaction  @relation(fields: [transactionId], references: [id])
+  description   String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime?    @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  USER
+  STAFF
+}
+
+enum AccountType {
+  WALLET
+  SAVINGS
+  MERCHANT
 }
 
 enum OperationType {
   DEPOSIT
   WITHDRAWAL
   TRANSFER
+  BILL_PAYMENT
+  MERCHANT_PAYMENT
 }
 
 enum TransactionStatus {
@@ -70,4 +113,10 @@ enum TransactionStatus {
   COMPLETED
   FAILED
   CANCELLED
+}
+
+enum IDType {
+  NATIONAL_ID
+  PASSPORT
+  DRIVERS_LICENSE
 }

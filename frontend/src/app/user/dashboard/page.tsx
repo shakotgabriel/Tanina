@@ -1,199 +1,192 @@
 "use client"
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  MessageSquare, 
-  HelpCircle, 
-  Shield, 
-  LogOut,
-  ChevronRight 
-} from 'lucide-react';
 
-interface UserProfile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  nationality: string;
-  idNumber: string;
-}
+import React from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { ArrowUpRight, Handshake, Receipt, MoreHorizontal, Search, Bell, Plus, ArrowRight } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useRouter } from "next/navigation"
 
-export default function Profile() {
-  const router = useRouter();
-  const [isEditing, setIsEditing] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+const recentBills = [
+  {
+    icon: "/logos/kfc.png",
+    name: "KFC Cafe",
+    date: "10 Dec, 2023",
+    time: "09:30",
+    amount: 61.43,
+    progress: 75
+  },
+  {
+    icon: "/logos/mcdonalds.png",
+    name: "McD Sudirman",
+    date: "10 Dec, 2023",
+    time: "09:30",
+    amount: 61.43,
+    progress: 50
+  },
+]
 
-  // Mock user data - replace with API call
-  const [profile, setProfile] = useState<UserProfile>({
-    firstName: 'zol',
-    lastName: 'kabir',
-    email: '@example.com',
-    phone: '+211 123456789',
-    address: 'Juba, South Sudan',
-    nationality: 'South Sudanese',
-    idNumber: 'ID123456'
-  });
-
-  const handleLogout = async () => {
-    try {
-      // Add actual logout API call here
-      console.log('Logging out...');
-      // Example: await auth.signOut();
-      router.push('/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-      setStatus('error');
-    }
-  };
-
-  const handleHelpCenter = () => {
-    try {
-      router.push('/Help-center');
-    } catch (error) {
-      console.error('Navigation failed:', error);
-      setStatus('error');
-    }
-  };
-
-  const handleMessageCenter = () => {
-    try {
-      router.push('/messages');
-    } catch (error) {
-      console.error('Navigation failed:', error);
-      setStatus('error');
-    }
-  };
-
-  const handlePrivacySettings = () => {
-    try {
-      router.push('/privacy');
-    } catch (error) {
-      console.error('Navigation failed:', error);
-      setStatus('error');
-    }
-  };
-
-  const handleSave = async () => {
-    setStatus('loading');
-    try {
-      // Add actual API call here
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setStatus('success');
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Save failed:', error);
-      setStatus('error');
-    }
-  };
+export default function MobileDashboardPage() {
+  const router = useRouter()
 
   return (
-    <div className="p-4 space-y-6 max-w-2xl mx-auto pb-20">
-      {/* Profile Header */}
-      <div className="text-center">
-        <div className="w-24 h-24 rounded-full bg-green-100 mx-auto mb-4 flex items-center justify-center">
-          <span className="text-3xl text-green-600">
-            {profile.firstName[0]}{profile.lastName[0]}
-          </span>
+    <ScrollArea className="h-screen">
+      <div className="p-6 space-y-6 bg-background min-h-screen">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Avatar className="w-12 h-12 rounded-2xl overflow-hidden">
+              <AvatarImage src="/placeholder.svg" />
+              <AvatarFallback>TA</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm text-muted-foreground">Good Morning,</p>
+              <h1 className="text-lg font-semibold text-foreground">Tanina 👋</h1>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" className="rounded-full w-10 h-10 border-0 bg-muted hover:bg-muted/80">
+              <Search className="h-5 w-5 text-foreground" />
+            </Button>
+            <Button variant="outline" size="icon" className="rounded-full w-10 h-10 border-0 bg-muted hover:bg-muted/80">
+              <Bell className="h-5 w-5 text-foreground" />
+            </Button>
+          </div>
         </div>
-        <h1 className="text-2xl font-bold text-green-800">
-          {profile.firstName} {profile.lastName}
-        </h1>
-        <p className="text-green-600">Personal Profile</p>
+
+        {/* Balance Card */}
+        <Card className="bg-primary text-primary-foreground rounded-3xl border-none shadow-sm">
+          <CardContent className="pt-6 pb-6">
+            <h2 className="text-sm text-primary-foreground/80 mb-2">Your Balance</h2>
+            <div className="flex items-center justify-between">
+              <p className="text-3xl font-bold">2,588.00 USD</p>
+              <Button 
+                className="bg-background text-foreground hover:bg-accent rounded-xl"
+                onClick={() => router.push('/user/wallet/deposit')}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Top Up
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Stats Cards */}
+        <div className="flex gap-3 overflow-auto pb-2 -mx-6 px-6">
+          <Card className="shadow-sm border-0 rounded-2xl flex-shrink-0 w-[180px]">
+            <CardContent className="p-4">
+              <h3 className="text-sm font-medium text-foreground mb-1">Monthly Bills</h3>
+              <p className="text-2xl font-bold text-foreground">$135.00</p>
+              <p className="text-sm text-muted-foreground mt-1">Due: Feb 1</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border-0 rounded-2xl flex-shrink-0 w-[180px]">
+            <CardContent className="p-4">
+              <h3 className="text-sm font-medium text-foreground mb-1">Savings Goal</h3>
+              <p className="text-2xl font-bold text-foreground">$3,890</p>
+              <p className="text-sm text-muted-foreground mt-1">Target: $5,000</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-4 gap-3">
+          <Button
+            variant="ghost"
+            className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
+            onClick={() => router.push('/user/wallet/transfer')}
+          >
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <ArrowUpRight className="h-5 w-5 text-primary" />
+            </div>
+            <span className="text-sm text-foreground">Transfer</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
+            onClick={() => router.push('/user/wallet/withdraw')}
+          >
+            <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+              <Handshake className="h-5 w-5 text-secondary" />
+            </div>
+            <span className="text-sm text-foreground">Withdraw</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
+            onClick={() => router.push('/user/wallet/payments')}
+          >
+            <div className="w-10 h-10 rounded-lg bg-chart-3/10 flex items-center justify-center">
+              <Receipt className="h-5 w-5 text-chart-3" />
+            </div>
+            <span className="text-sm text-foreground">Payments</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
+            onClick={() => router.push('/user/more')}
+          >
+            <div className="w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center">
+              <MoreHorizontal className="h-5 w-5 text-chart-4" />
+            </div>
+            <span className="text-sm text-foreground">More</span>
+          </Button>
+        </div>
+
+        {/* Recent Bills */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Recent Bills</h2>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="rounded-full hover:bg-muted/80 shadow-sm border border-border/5"
+              onClick={() => router.push('/user/bills')}
+            >
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            {recentBills.map((bill) => (
+              <Card key={bill.name} className="shadow-sm border-0 rounded-2xl">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center overflow-hidden">
+                        <img src={bill.icon} alt={bill.name} className="w-6 h-6 rounded-lg" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium text-foreground">{bill.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {bill.date} | {bill.time}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="font-medium text-foreground">${bill.amount}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Progress
+                          value={bill.progress}
+                          className="w-20 h-2 rounded-full"
+                        />
+                        <span className="text-sm text-primary">{bill.progress}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
-
-      {/* Help & Support */}
-      <Card className="border-green-100">
-        <CardHeader>
-          <CardTitle className="text-green-800">Help & Support</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <button 
-            className="w-full flex items-center justify-between p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            onClick={handleHelpCenter}
-          >
-            <div className="flex items-center space-x-3">
-              <HelpCircle className="w-5 h-5 text-green-600" />
-              <div className="text-left">
-                <h3 className="font-medium text-green-800">Help Center</h3>
-                <p className="text-sm text-green-600">FAQs and support guides</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-green-600" />
-          </button>
-
-          <button 
-            className="w-full flex items-center justify-between p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            onClick={handleMessageCenter}
-          >
-            <div className="flex items-center space-x-3">
-              <MessageSquare className="w-5 h-5 text-green-600" />
-              <div className="text-left">
-                <h3 className="font-medium text-green-800">Message Center</h3>
-                <p className="text-sm text-green-600">View notifications and updates</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-green-600" />
-          </button>
-        </CardContent>
-      </Card>
-
-      {/* Privacy & Security */}
-      <Card className="border-green-100">
-        <CardHeader>
-          <CardTitle className="text-green-800">Privacy & Security</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <button 
-            className="w-full flex items-center justify-between p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            onClick={handlePrivacySettings}
-          >
-            <div className="flex items-center space-x-3">
-              <Shield className="w-5 h-5 text-green-600" />
-              <div className="text-left">
-                <h3 className="font-medium text-green-800">Data & Privacy</h3>
-                <p className="text-sm text-green-600">Manage your data and privacy settings</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-green-600" />
-          </button>
-
-          <button 
-            className="w-full flex items-center justify-between p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            onClick={handleLogout}
-          >
-            <div className="flex items-center space-x-3">
-              <LogOut className="w-5 h-5 text-red-600" />
-              <div className="text-left">
-                <h3 className="font-medium text-red-600">Log Out</h3>
-                <p className="text-sm text-red-600">Sign out of your account</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-red-600" />
-          </button>
-        </CardContent>
-      </Card>
-
-      {/* Status Alerts */}
-      {status === 'success' && (
-        <Alert className="bg-green-50">
-          <AlertDescription className="text-green-800">
-            Profile updated successfully!
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {status === 'error' && (
-        <Alert className="bg-red-50">
-          <AlertDescription className="text-red-800">
-            Failed to update profile. Please try again.
-          </AlertDescription>
-        </Alert>
-      )}
-    </div>
-  );
+    </ScrollArea>
+  )
 }
