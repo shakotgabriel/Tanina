@@ -1,14 +1,16 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from '@prisma/client';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  async createUser(@Body() data: { name: string; email: string }): Promise<User> {
-    return this.usersService.createUser(data);
+  async createUser(@Body() createUserDto: CreateUserDto): Promise<User> {
+    return this.usersService.createUser(createUserDto);
   }
 
   @Get(':id')
@@ -24,9 +26,12 @@ export class UsersController {
   }
 
   @Put(':id')
-  async updateUser(@Param('id') id: string, @Body() data: { name?: string; email?: string }): Promise<User> {
+  async updateUser(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto
+  ): Promise<User> {
     try {
-      return await this.usersService.updateUser(Number(id), data);
+      return await this.usersService.updateUser(Number(id), updateUserDto);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
