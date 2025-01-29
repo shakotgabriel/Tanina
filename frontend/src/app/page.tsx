@@ -1,13 +1,15 @@
-import React from 'react'
+import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import DashboardPage from './user/dashboard/page';
 
-import DashboardPage from './user/dashboard/page'
-function page() {
+function App() {
   return (
-    <div>
-
+    <QueryClientProvider client={new QueryClient()}>
+      <div>
         <DashboardPage/>
-    </div>
-  )
+      </div>
+    </QueryClientProvider>
+  );
 }
 
-export default page
+export default App;
