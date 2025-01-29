@@ -1,30 +1,16 @@
+'use client'
+
 import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google"
 import "./globals.css"
 import { cn } from "@/lib/utils"
 import { NavigationBar } from "@/components/NavigationBar";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const outfit = Outfit({ subsets: ["latin"] })
+const queryClient = new QueryClient()
 
-export const metadata: Metadata = {
-  title: "Tanina - Digital Payment Platform",
-  description: "Seamless digital payments and financial services",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Tanina",
-  },
-};
-
-export const viewport: Viewport = {
-  themeColor: "#166534",
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  viewportFit: "cover",
-};
-
+// Move metadata and viewport to a separate metadata file since they can't be in client components
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -34,10 +20,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body className={cn(outfit.className, "min-h-screen bg-background")}>
-        <main className="flex flex-col min-h-screen">
-          <div className="mobile-container">{children}</div>
-          <NavigationBar />
-        </main>
+        <QueryClientProvider client={queryClient}>
+          <main className="flex flex-col min-h-screen">
+            <div className="mobile-container">{children}</div>
+            <NavigationBar />
+          </main>
+        </QueryClientProvider>
       </body>
     </html>
   )
