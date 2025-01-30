@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TransactionStatus, OperationType, Prisma } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -43,7 +47,9 @@ export class TransactionsService {
       });
 
       if (!destAccount || !destAccount.isActive) {
-        throw new NotFoundException('Destination account not found or inactive');
+        throw new NotFoundException(
+          'Destination account not found or inactive',
+        );
       }
 
       const transaction = await prisma.transaction.create({
