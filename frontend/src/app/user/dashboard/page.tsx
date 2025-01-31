@@ -8,6 +8,7 @@ import { ArrowUpRight, Handshake, Receipt, MoreHorizontal, Search, Bell, Plus, A
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 const recentBills = [
   {
@@ -166,7 +167,7 @@ export default function MobileDashboardPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 flex-1">
                       <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center overflow-hidden">
-                        <img src={bill.icon} alt={bill.name} className="w-6 h-6 rounded-lg" />
+                        <Image src={bill.icon} alt={bill.name} width={24} height={24} className="w-6 h-6 rounded-lg" />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-medium text-foreground">{bill.name}</h3>
