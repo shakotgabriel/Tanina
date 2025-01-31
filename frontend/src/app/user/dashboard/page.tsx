@@ -37,10 +37,16 @@ export default function MobileDashboardPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Avatar className="w-12 h-12 rounded-2xl overflow-hidden">
-              <AvatarImage src="/placeholder.svg" />
-              <AvatarFallback>TA</AvatarFallback>
-            </Avatar>
+            <Button 
+              variant="ghost" 
+              className="p-0 rounded-full" 
+              onClick={() => router.push('/user/profile')}
+            >
+              <Avatar className="w-12 h-12 rounded-2xl overflow-hidden">
+                <AvatarImage src="/placeholder.svg" />
+                <AvatarFallback>TA</AvatarFallback>
+              </Avatar>
+            </Button>
             <div>
               <p className="text-sm text-muted-foreground">Good Morning,</p>
               <h1 className="text-lg font-semibold text-foreground">Tanina 👋</h1>
@@ -130,12 +136,12 @@ export default function MobileDashboardPage() {
           <Button
             variant="ghost"
             className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
-            onClick={() => router.push('/user/more')}
+            onClick={() => router.push('/user/wallet/merchant')}
           >
             <div className="w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center">
               <MoreHorizontal className="h-5 w-5 text-chart-4" />
             </div>
-            <span className="text-sm text-foreground">More</span>
+            <span className="text-sm text-foreground">Merchant</span>
           </Button>
         </div>
 
