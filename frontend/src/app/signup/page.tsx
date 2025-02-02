@@ -3,13 +3,14 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useRouter } from "next/navigation"
+import { useSignup, type SignupCredentials } from "@/hooks/use-auth"
 
 const signupSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -23,63 +24,52 @@ type SignupFormData = z.infer<typeof signupSchema>
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
   const router = useRouter()
+  const signup = useSignup()
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
   })
 
   const onSubmit = async (data: SignupFormData) => {
     try {
-      const response = await fetch('http://localhost:3001/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Something went wrong')
-      }
-
-      localStorage.setItem('access_token', result.access_token)
+      await signup.mutateAsync(data as SignupCredentials)
       router.push('/user/dashboard')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sign up')
+    } catch (error) {
+      // Error handling is managed by the mutation
+      console.error('Signup failed:', error)
     }
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="pb-20 pt-6 px-4 md:pt-12 md:pb-12"> {/* Added pb-20 for bottom nav space */}
-        <div className="w-full max-w-sm mx-auto space-y-4"> {/* Reduced space-y-6 to space-y-4 */}
-          <div className="space-y-1 text-center"> {/* Reduced space-y-2 to space-y-1 */}
+      <div className="pb-20 pt-6 px-4 md:pt-12 md:pb-12">
+        <div className="w-full max-w-sm mx-auto space-y-4">
+          <div className="space-y-1 text-center">
             <h1 className="text-xl font-bold md:text-3xl">Create an Account</h1>
             <p className="text-xs text-gray-500 md:text-base">Enter your information to get started</p>
           </div>
 
-          {error && (
+          {signup.error && (
             <Alert variant="destructive" className="text-xs">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                {signup.error instanceof Error ? signup.error.message : 'Failed to sign up'}
+              </AlertDescription>
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3"> {/* Reduced space-y-4 to space-y-3 */}
-            <div className="space-y-3"> {/* Single column for mobile */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <div className="space-y-3">
               <div className="space-y-1">
                 <Input
                   {...register("firstName")}
                   placeholder="First Name"
                   type="text"
-                  className="h-11" // Increased touch target
+                  className="h-11"
                 />
                 {errors.firstName && (
                   <p className="text-xs text-red-500">{errors.firstName.message}</p>
@@ -150,10 +140,10 @@ export default function SignupPage() {
 
             <Button
               type="submit"
-              className="w-full h-11 mt-4" // Increased height and adjusted margin
-              disabled={isSubmitting}
+              className="w-full h-11 mt-4"
+              disabled={signup.isPending}
             >
-              {isSubmitting ? "Creating Account..." : "Sign Up"}
+              {signup.isPending ? "Creating Account..." : "Sign Up"}
             </Button>
           </form>
 
