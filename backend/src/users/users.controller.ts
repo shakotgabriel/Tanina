@@ -13,6 +13,11 @@ export class UsersController {
     return this.usersService.createUser(createUserDto);
   }
 
+  @Get()
+  async getUsers(): Promise<User[]> {
+    return this.usersService.getUsers();
+  }
+
   @Get(':id')
   async getUserById(@Param('id') id: string): Promise<User> {
     try {
