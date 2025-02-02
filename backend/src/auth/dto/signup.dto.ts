@@ -17,5 +17,5 @@ export class SignupDto {
   password: string;
 
   @IsPhoneNumber()
-  phoneNumber: string;
+  phoneNumber?: string;
 }

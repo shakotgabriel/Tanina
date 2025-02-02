@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useLogin } from "@/hooks/use-auth"
 
 interface AuthFormProps {
   type: "login" | "signup"
@@ -27,6 +28,8 @@ export function AuthForm({ type }: AuthFormProps) {
   const pathname = usePathname()
   const router = useRouter()
 
+  const login = useLogin()
+
   const {
     register,
     handleSubmit,
@@ -37,24 +40,7 @@ export function AuthForm({ type }: AuthFormProps) {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const response = await fetch(`http://localhost:3001/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Something went wrong')
-      }
-
-      // Store the token
-      localStorage.setItem('token', result.token)
-      
-      // Redirect to dashboard
+      await login.mutateAsync(data)
       router.push('/user/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to log in')

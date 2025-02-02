@@ -6,6 +6,7 @@ import "./globals.css"
 import { cn } from "@/lib/utils"
 import { NavigationBar } from "@/components/NavigationBar";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const outfit = Outfit({ subsets: ["latin"] })
 const queryClient = new QueryClient()
@@ -21,10 +22,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={cn(outfit.className, "min-h-screen bg-background")}>
         <QueryClientProvider client={queryClient}>
-          <main className="flex flex-col min-h-screen">
-            <div className="mobile-container">{children}</div>
-            <NavigationBar />
-          </main>
+          <AuthProvider>
+            <main className="flex flex-col min-h-screen">
+              <div className="mobile-container">{children}</div>
+              <NavigationBar />
+            </main>
+          </AuthProvider>
         </QueryClientProvider>
       </body>
     </html>

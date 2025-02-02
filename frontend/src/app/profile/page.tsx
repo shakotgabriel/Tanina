@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import {
   LogOut,
   ChevronRight 
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import  { useUser } from "@/hooks/use-users";
 
 interface UserProfile {
   firstName: string;
@@ -25,20 +27,10 @@ interface UserProfile {
 
 export default function Profile() {
   const router = useRouter();
+  const { token, user: authUser } = useAuth();
+  const { data: user, isLoading, error } = useUser(authUser?.userId);
   const [isEditing, setIsEditing] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-
-  // Mock user data - replace with API call
-  const [profile, setProfile] = useState<UserProfile>({
-    firstName: 'zol',
-    lastName: 'kabir',
-    email: '@example.com',
-    phone: '+211 123456789',
-    address: 'Juba, South Sudan',
-    nationality: 'South Sudanese',
-    idNumber: 'ID123456'
-  });
-
   const handleLogout = async () => {
     try {
       // Add actual logout API call here
@@ -91,17 +83,27 @@ export default function Profile() {
     }
   };
 
+  if(isLoading) {
+    return (<p>Loading Profile</p>)
+  }
+
+  if(error) {
+    return (<p>Error loading Profile</p>)
+  }
+
+  console.log("Got a user", user)
+
   return (
     <div className="p-4 space-y-6 max-w-2xl mx-auto pb-20">
       {/* Profile Header */}
       <div className="text-center">
         <div className="w-24 h-24 rounded-full bg-green-100 mx-auto mb-4 flex items-center justify-center">
           <span className="text-3xl text-green-600">
-            {profile.firstName[0]}{profile.lastName[0]}
+          {user?.firstName[0]}
           </span>
         </div>
         <h1 className="text-2xl font-bold text-green-800">
-          {profile.firstName} {profile.lastName}
+        {user?.firstName} {user?.lastName}
         </h1>
         <p className="text-green-600">Personal Profile</p>
       </div>

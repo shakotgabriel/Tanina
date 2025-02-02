@@ -62,4 +62,9 @@ export class UsersService {
     }
     return this.prisma.user.delete({ where: { id } });
   }
+
+
+  async getUsers(): Promise<User[]> {
+    return this.prisma.user.findMany();
+  }
 }
