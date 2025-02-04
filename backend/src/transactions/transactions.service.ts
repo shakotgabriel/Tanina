@@ -44,7 +44,8 @@ export class TransactionsService {
         throw new NotFoundException('Source account not found or inactive');
       }
 
-      if (sourceAccount.balance < amount) {
+      const balance = sourceAccount.balance as unknown as number;
+      if (balance < amount) {
         throw new BadRequestException('Insufficient funds');
       }
 
@@ -64,17 +65,18 @@ export class TransactionsService {
           type: OperationType.TRANSFER,
           status: TransactionStatus.PENDING,
           description,
+          amount,
           debits: {
             create: {
               amount,
-              accountId: fromAccountId,
+              walletId: fromAccountId,
               description,
             },
           },
           credits: {
             create: {
               amount,
-              accountId: toAccountId,
+              walletId: toAccountId,
               description,
             },
           },
@@ -99,19 +101,13 @@ export class TransactionsService {
         },
       });
 
-      const updatedTransaction = await prisma.transaction.update({
-        where: { id: transaction.id },
-        data: {
-          status: TransactionStatus.COMPLETED,
-        },
-      });
-
-      return updatedTransaction;
+      return transaction;
     });
   }
 
   async sendMoney(dto: SendMoneyDto) {
-    const { senderAccountNumber, receiverAccountNumber, amount } = dto;
+    const { senderAccountNumber, receiverAccountNumber, amount, description } =
+      dto;
 
     const { sender, receiver } =
       await this.validateTransactionHook.validateSendMoney(
@@ -120,38 +116,50 @@ export class TransactionsService {
         amount,
       );
 
-    return this.prisma.$transaction(async (prisma) => {
-      await prisma.account.update({
-        where: { id: sender.id },
-        data: { balance: { decrement: amount } },
-      });
-      await prisma.account.update({
-        where: { id: receiver.id },
-        data: { balance: { increment: amount } },
-      });
-
-      return prisma.transaction.create({
+    return await this.prisma.$transaction(async (prisma) => {
+      const transaction = await prisma.transaction.create({
         data: {
-          reference: `TXN-${Date.now()}`,
+          reference: uuidv4(),
           type: OperationType.TRANSFER,
           status: TransactionStatus.COMPLETED,
+          amount,
           description: `Transfer from ${senderAccountNumber} to ${receiverAccountNumber}`,
           debits: {
             create: {
               amount,
-              accountId: sender.id,
+              walletId: sender.id,
               description: `Sent to ${receiverAccountNumber}`,
             },
           },
           credits: {
             create: {
               amount,
-              accountId: receiver.id,
+              walletId: receiver.id,
               description: `Received from ${senderAccountNumber}`,
             },
           },
         },
       });
+
+      await prisma.account.update({
+        where: { id: sender.id },
+        data: {
+          balance: {
+            decrement: amount,
+          },
+        },
+      });
+
+      await prisma.account.update({
+        where: { id: receiver.id },
+        data: {
+          balance: {
+            increment: amount,
+          },
+        },
+      });
+
+      return transaction;
     });
   }
 
@@ -175,10 +183,11 @@ export class TransactionsService {
           type: OperationType.DEPOSIT,
           status: TransactionStatus.PENDING,
           description,
+          amount,
           credits: {
             create: {
               amount,
-              accountId,
+              walletId: accountId,
               description,
             },
           },
@@ -194,14 +203,7 @@ export class TransactionsService {
         },
       });
 
-      const updatedTransaction = await prisma.transaction.update({
-        where: { id: transaction.id },
-        data: {
-          status: TransactionStatus.COMPLETED,
-        },
-      });
-
-      return updatedTransaction;
+      return transaction;
     });
   }
 
@@ -219,7 +221,8 @@ export class TransactionsService {
         throw new NotFoundException('Account not found or inactive');
       }
 
-      if (account.balance < amount) {
+      const balance = account.balance as unknown as number;
+      if (balance < amount) {
         throw new BadRequestException('Insufficient funds');
       }
 
@@ -229,10 +232,11 @@ export class TransactionsService {
           type: OperationType.WITHDRAWAL,
           status: TransactionStatus.PENDING,
           description,
+          amount,
           debits: {
             create: {
               amount,
-              accountId,
+              walletId: accountId,
               description,
             },
           },
@@ -248,14 +252,7 @@ export class TransactionsService {
         },
       });
 
-      const updatedTransaction = await prisma.transaction.update({
-        where: { id: transaction.id },
-        data: {
-          status: TransactionStatus.COMPLETED,
-        },
-      });
-
-      return updatedTransaction;
+      return transaction;
     });
   }
 
@@ -266,14 +263,14 @@ export class TransactionsService {
           {
             debits: {
               some: {
-                accountId,
+                walletId: accountId,
               },
             },
           },
           {
             credits: {
               some: {
-                accountId,
+                walletId: accountId,
               },
             },
           },

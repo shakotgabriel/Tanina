@@ -1,8 +1,6 @@
 import { createParamDecorator, ExecutionContext, BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
-// Remove ValidateTransfer decorator
-
 export const ValidateDeposit = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
@@ -56,7 +54,8 @@ export class ValidateTransactionHook {
     const receiver = await this.prisma.account.findUnique({ where: { accountNumber: receiverAccountNumber } });
     if (!receiver) throw new NotFoundException('Receiver account not found');
 
-    if (sender.balance < amount) throw new BadRequestException('Insufficient balance');
+    const balance = sender.balance as unknown as number;
+    if (balance < amount) throw new BadRequestException('Insufficient balance');
 
     return { sender, receiver };
   }

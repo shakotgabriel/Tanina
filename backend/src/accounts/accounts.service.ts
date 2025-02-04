@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { AccountType } from '@prisma/client';
+import { AccountType, CurrencyType } from '@prisma/client';
 
 @Injectable()
 export class AccountsService {
@@ -9,7 +9,7 @@ export class AccountsService {
   async createAccount(
     userId: number,
     accountType: AccountType,
-    currency: string = 'SSP',
+    currency: CurrencyType = CurrencyType.SSP,
   ) {
     const accountNumber = this.generateAccountNumber();
 
