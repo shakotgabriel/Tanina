@@ -4,12 +4,18 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { TransactionStatus, OperationType, Prisma } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
+import { SendMoneyDto } from './dtos/send-money.dto';
+import { ValidateTransactionHook } from './hooks/validate-transaction.hook';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly validateTransactionHook: ValidateTransactionHook,
+  ) {}
 
   async deposit(accountId: number, amount: number, description?: string) {
     return this.creditAccount(accountId, amount, description);
@@ -101,6 +107,51 @@ export class TransactionsService {
       });
 
       return updatedTransaction;
+    });
+  }
+
+  async sendMoney(dto: SendMoneyDto) {
+    const { senderAccountNumber, receiverAccountNumber, amount } = dto;
+
+    const { sender, receiver } =
+      await this.validateTransactionHook.validateSendMoney(
+        senderAccountNumber,
+        receiverAccountNumber,
+        amount,
+      );
+
+    return this.prisma.$transaction(async (prisma) => {
+      await prisma.account.update({
+        where: { id: sender.id },
+        data: { balance: { decrement: amount } },
+      });
+      await prisma.account.update({
+        where: { id: receiver.id },
+        data: { balance: { increment: amount } },
+      });
+
+      return prisma.transaction.create({
+        data: {
+          reference: `TXN-${Date.now()}`,
+          type: OperationType.TRANSFER,
+          status: TransactionStatus.COMPLETED,
+          description: `Transfer from ${senderAccountNumber} to ${receiverAccountNumber}`,
+          debits: {
+            create: {
+              amount,
+              accountId: sender.id,
+              description: `Sent to ${receiverAccountNumber}`,
+            },
+          },
+          credits: {
+            create: {
+              amount,
+              accountId: receiver.id,
+              description: `Received from ${senderAccountNumber}`,
+            },
+          },
+        },
+      });
     });
   }
 
