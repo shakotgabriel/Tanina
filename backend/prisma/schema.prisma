@@ -506,6 +506,7 @@ enum OperationType {
   MERCHANT_PAYMENT
   CASH_IN
   CASH_OUT
+  CURRENCY_EXCHANGE
 }
 
 enum TransactionStatus {

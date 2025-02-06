@@ -12,55 +12,66 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly prisma: PrismaService // Add this property
+    private readonly prisma: PrismaService
   ) {}
 
-  async signup(createUserDto: CreateUserDto) {
+  private generateToken(userId: number, email: string, role: string) {
+    return this.jwtService.sign({ 
+      userId,
+      email,
+      role,
+    });
+  }
 
-    console.log("Hey, User Here", createUserDto);
-    const user = await this.usersService.createUser(createUserDto);
-    const payload = { email: user.email, sub: user.id };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+  async signup(createUserDto: CreateUserDto) {
+    try {
+      const user = await this.usersService.createUser(createUserDto);
+      const token = this.generateToken(user.id, user.email, user.role);
+      
+      return {
+        message: 'Signup successful',
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+        },
+      };
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      throw new UnauthorizedException('Signup failed');
+    }
   }
 
   async login(loginDto: LoginDto) {
-    const { email, password } = loginDto;
+    try {
+      const { email, password } = loginDto;
+      const user = await this.usersService.getUserByEmail(email);
 
-    // Find user
-    const user = await this.prisma.user.findUnique({
-      where: { email },
-    });
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
 
-    if (!user) {
+      const token = this.generateToken(user.id, user.email, user.role);
+
+      return {
+        message: 'Login successful',
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+        },
+      };
+    } catch (error) {
       throw new UnauthorizedException('Invalid credentials');
     }
-
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // Generate JWT
-    const token = this.jwtService.sign({ 
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    });
-
-    return {
-      message: 'Login successful',
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      },
-    };
   }
 }

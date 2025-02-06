@@ -1,8 +1,9 @@
-import { Controller, Post, UseGuards, Body } from '@nestjs/common';
+import { Controller, Post, UseGuards, Body, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SendMoneyDto } from './dtos/send-money.dto';
+import { CurrencyExchangeDto } from './dtos/currency-exchange.dto';
 import { AccountTransactionData, TransferData } from './types/transaction.types';
 
 @ApiTags('transactions')
@@ -59,5 +60,20 @@ export class TransactionsController {
   @ApiResponse({ status: 404, description: 'Account not found' })
   async sendMoney(@Body() dto: SendMoneyDto) {
     return this.transactionsService.sendMoney(dto);
+  }
+
+  @Post('exchange-currency')
+  @ApiOperation({ summary: 'Convert money between different currency wallets' })
+  @ApiResponse({ status: 201, description: 'Currency exchange successful' })
+  @ApiResponse({ status: 400, description: 'Invalid input or insufficient funds' })
+  @ApiResponse({ status: 404, description: 'Wallet not found' })
+  async exchangeCurrency(@Req() req: any, @Body() dto: CurrencyExchangeDto) {
+    return this.transactionsService.convertCurrency(
+      req.user.id,
+      dto.amount,
+      dto.fromCurrency,
+      dto.toCurrency,
+      dto.description,
+    );
   }
 }
