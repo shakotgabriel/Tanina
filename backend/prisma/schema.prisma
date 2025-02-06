@@ -8,96 +8,212 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  firstName     String
-  lastName      String
-  email         String    @unique
-  phoneNumber   String?    @unique
-  password      String
-  role          UserRole  @default(USER)
-  isVerified    Boolean   @default(false)
-  accounts      Account[]
-  profile       Profile?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime? @updatedAt
+  id                 Int        @id @default(autoincrement())
+  firstName          String     @db.VarChar(50)
+  lastName           String     @db.VarChar(50)
+  email              String     @unique @db.VarChar(255)
+  phoneNumber        String?    @unique @db.VarChar(20)
+  password           String
+  role               UserRole   @default(USER)
+  isVerified         Boolean    @default(false)
+  kycStatus          KYCStatus  @default(PENDING)
+  kycRejectionReason String?    @db.Text
+  lastLoginAt        DateTime?
+  lastLoginIP        String?    @db.VarChar(45)
+  passwordChangedAt  DateTime?
+  accounts           Account[]
+  wallets            Wallet[]
+  profile            Profile?
+  auditLogs          AuditLog[]
+  agent              Agent?
+  admin              Admin?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime?  @updatedAt
+
+  @@index([email])
+  @@index([phoneNumber])
 }
 
 model Profile {
-  id            Int       @id @default(autoincrement())
-  userId        Int       @unique
-  user          User      @relation(fields: [userId], references: [id])
-  address       String?
-  dateOfBirth   DateTime?
-  nationality   String?
-  idNumber      String?   @unique
-  idType        IDType?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime? @updatedAt
+  id          Int        @id @default(autoincrement())
+  userId      Int        @unique
+  user        User       @relation(fields: [userId], references: [id])
+  address     String?
+  dateOfBirth DateTime?
+  nationality String?
+  idNumber    String?    @unique
+  idType      IDType?
+  selfieUrl   String?
+  documentUrl String?
+  auditLogs   AuditLog[] @relation("ProfileAudit")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime?  @updatedAt
 }
 
 model Account {
   id            Int           @id @default(autoincrement())
   userId        Int
   user          User          @relation(fields: [userId], references: [id])
-  accountType   AccountType   @default(WALLET)
-  accountNumber String        @unique
-  balance       Float         @default(0.0)
-  currency      String        @default("SSP")
+  accountType   AccountType
+  accountNumber String        @unique @db.VarChar(20)
+  balance       Decimal       @default(0) @db.Decimal(20,2)
+  currency      CurrencyType
+  status        AccountStatus @default(ACTIVE)
   isActive      Boolean       @default(true)
-  debits        Debit[]
-  credits       Credit[]
+  wallets       Wallet[]
+  auditLogs     AuditLog[]    @relation("AccountAudit")
   createdAt     DateTime      @default(now())
   updatedAt     DateTime?     @updatedAt
+
+  @@index([accountNumber])
+  @@index([userId])
+}
+
+model Wallet {
+  id        Int          @id @default(autoincrement())
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id])
+  accountId Int
+  account   Account      @relation(fields: [accountId], references: [id])
+  balance   Decimal      @default(0) @db.Decimal(20, 2)
+  currency  CurrencyType
+  isActive  Boolean      @default(true)
+  auditLogs AuditLog[]   @relation("WalletAudit")
+  debits    Debit[]
+  credits   Credit[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime?    @updatedAt
+
+  @@index([userId])
+  @@index([accountId])
 }
 
 model Transaction {
   id            Int               @id @default(autoincrement())
-  reference     String           @unique
+  reference     String            @unique @db.VarChar(50)
   type          OperationType
   status        TransactionStatus @default(PENDING)
-  description   String?
+  description   String?           @db.Text
+  amount        Decimal           @db.Decimal(20, 2)
+  fee           Decimal           @default(0) @db.Decimal(20, 2)
   debits        Debit[]
   credits       Credit[]
-  metadata      Json?            // For additional transaction details
-  failureReason String?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime?        @updatedAt
+  metadata      Json?
+  failureReason String?           @db.Text
+  auditLogs     AuditLog[]        @relation("TransactionAudit")
+  agent         Agent?            @relation(fields: [id], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime?         @updatedAt
+
+  @@index([reference])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Debit {
-  id            Int          @id @default(autoincrement())
+  id            Int         @id @default(autoincrement())
   amount        Float
-  accountId     Int
-  account       Account      @relation(fields: [accountId], references: [id])
+  walletId      Int
+  wallet        Wallet      @relation(fields: [walletId], references: [id])
   transactionId Int
-  transaction   Transaction  @relation(fields: [transactionId], references: [id])
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
   description   String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime?    @updatedAt
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime?   @updatedAt
 }
 
 model Credit {
-  id            Int          @id @default(autoincrement())
+  id            Int         @id @default(autoincrement())
   amount        Float
-  accountId     Int
-  account       Account      @relation(fields: [accountId], references: [id])
+  walletId      Int
+  wallet        Wallet      @relation(fields: [walletId], references: [id])
   transactionId Int
-  transaction   Transaction  @relation(fields: [transactionId], references: [id])
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
   description   String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime?    @updatedAt
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime?   @updatedAt
+}
+
+model Commission {
+  id        Int      @id @default(autoincrement())
+  agentId   Int
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  amount    Float
+  createdAt DateTime @default(now())
+}
+
+model Agent {
+  id           Int           @id @default(autoincrement())
+  userId       Int           @unique
+  user         User          @relation(fields: [userId], references: [id])
+  balance      Decimal       @default(0) @db.Decimal(20, 2)
+  isActive     Boolean       @default(true)
+  transactions Transaction[]
+  commissions  Commission[]
+  createdAt    DateTime      @default(now())
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id          Int          @id @default(autoincrement())
+  userId      Int?
+  user        User?        @relation(fields: [userId], references: [id])
+  entityId    Int
+  entityType  EntityType
+  action      ActionType
+  oldValue    Json?
+  newValue    Json?
+  ipAddress   String?
+  userAgent   String?
+  profile     Profile?     @relation("ProfileAudit", fields: [entityId], references: [id], map: "AuditLog_profile_fkey")
+  account     Account?     @relation("AccountAudit", fields: [entityId], references: [id], map: "AuditLog_account_fkey")
+  wallet      Wallet?      @relation("WalletAudit", fields: [entityId], references: [id], map: "AuditLog_wallet_fkey")
+  transaction Transaction? @relation("TransactionAudit", fields: [entityId], references: [id], map: "AuditLog_transaction_fkey")
+  createdAt   DateTime     @default(now())
+}
+
+enum EntityType {
+  USER
+  PROFILE
+  ACCOUNT
+  WALLET
+  TRANSACTION
+}
+
+enum ActionType {
+  CREATE
+  UPDATE
+  DELETE
 }
 
 enum UserRole {
   ADMIN
   USER
   STAFF
+  AGENT
+  MERCHANT
 }
 
 enum AccountType {
+  PERSONAL
+  BUSINESS
   WALLET
   SAVINGS
   MERCHANT
+}
+
+enum CurrencyType {
+  USD
+  KES
+  SSP
+  UGX
+  RWF
 }
 
 enum OperationType {
@@ -106,6 +222,8 @@ enum OperationType {
   TRANSFER
   BILL_PAYMENT
   MERCHANT_PAYMENT
+  CASH_IN
+  CASH_OUT
 }
 
 enum TransactionStatus {
@@ -119,4 +237,17 @@ enum IDType {
   NATIONAL_ID
   PASSPORT
   DRIVERS_LICENSE
+}
+
+enum KYCStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+  DORMANT
 }
