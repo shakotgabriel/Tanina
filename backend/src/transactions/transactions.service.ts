@@ -67,18 +67,22 @@ export class TransactionsService {
           description,
           amount,
           debits: {
-            create: {
-              amount,
-              walletId: fromAccountId,
-              description,
-            },
+            create: [
+              {
+                amount,
+                description,
+                walletId: fromAccountId,
+              },
+            ],
           },
           credits: {
-            create: {
-              amount,
-              walletId: toAccountId,
-              description,
-            },
+            create: [
+              {
+                amount,
+                description,
+                walletId: toAccountId,
+              },
+            ],
           },
         },
       });
@@ -125,18 +129,22 @@ export class TransactionsService {
           amount,
           description: `Transfer from ${senderAccountNumber} to ${receiverAccountNumber}`,
           debits: {
-            create: {
-              amount,
-              walletId: sender.id,
-              description: `Sent to ${receiverAccountNumber}`,
-            },
+            create: [
+              {
+                amount,
+                description: `Sent to ${receiverAccountNumber}`,
+                walletId: sender.id,
+              },
+            ],
           },
           credits: {
-            create: {
-              amount,
-              walletId: receiver.id,
-              description: `Received from ${senderAccountNumber}`,
-            },
+            create: [
+              {
+                amount,
+                description: `Received from ${senderAccountNumber}`,
+                walletId: receiver.id,
+              },
+            ],
           },
         },
       });
@@ -185,11 +193,13 @@ export class TransactionsService {
           description,
           amount,
           credits: {
-            create: {
-              amount,
-              walletId: accountId,
-              description,
-            },
+            create: [
+              {
+                amount,
+                description,
+                walletId: accountId,
+              },
+            ],
           },
         },
       });
@@ -234,11 +244,13 @@ export class TransactionsService {
           description,
           amount,
           debits: {
-            create: {
-              amount,
-              walletId: accountId,
-              description,
-            },
+            create: [
+              {
+                amount,
+                description,
+                walletId: accountId,
+              },
+            ],
           },
         },
       });
@@ -263,14 +275,22 @@ export class TransactionsService {
           {
             debits: {
               some: {
-                walletId: accountId,
+                wallet: {
+                  is: {
+                    id: accountId,
+                  },
+                },
               },
             },
           },
           {
             credits: {
               some: {
-                walletId: accountId,
+                wallet: {
+                  is: {
+                    id: accountId,
+                  },
+                },
               },
             },
           },
