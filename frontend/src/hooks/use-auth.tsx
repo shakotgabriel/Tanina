@@ -1,11 +1,12 @@
 import { 
     useQuery, 
     useMutation, 
-    useQueryClient 
+    useQueryClient,
+    UseQueryResult
 } from '@tanstack/react-query';
 
-
 import { apiClient, authAxios } from '@/lib/api/client';
+import { usePathname } from 'next/navigation';
 
 export interface AuthUser {
     id: string;
@@ -32,13 +33,11 @@ export interface LoginCredentials {
 
 export interface AuthResponse {
     user: AuthUser;
-    access_token?: string;
-    token?: string;
+    access_token: string;
+    message: string;
 }
 
-
-
-
+// Add auth token to all requests
 authAxios.interceptors.request.use((config) => {
     const token = localStorage.getItem('access_token');
     if (token) {
@@ -47,94 +46,92 @@ authAxios.interceptors.request.use((config) => {
     return config;
 });
 
+// Handle 401 responses
+authAxios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            const pathname = window.location.pathname;
+            if (!pathname.startsWith('/auth/')) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('user');
+                window.location.href = '/auth/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 
-export const useCurrentUser = () => {
+export const useCurrentUser = (): UseQueryResult<AuthUser | null, Error> => {
+    const pathname = usePathname();
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const isAuthPage = pathname?.startsWith('/auth/');
+
     return useQuery({
         queryKey: ['currentUser'],
         queryFn: async () => {
-            const { data } = await authAxios.get('/auth/me');
-            return data as AuthUser;
+            try {
+                // Don't fetch user data on auth pages or if no token exists
+                if (isAuthPage || !token) {
+                    return null;
+                }
+                const { data } = await authAxios.get<AuthUser>('/auth/me');
+                return data;
+            } catch {
+                return null;
+            }
         },
-        // Only run if we have a token
-        enabled: !!localStorage.getItem('access_token'),
-        retry: false,
         staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+        gcTime: 10 * 60 * 1000, // Keep unused data in cache for 10 minutes
+        retry: false, // Don't retry failed requests
+        refetchOnWindowFocus: false, // Don't refetch when window gains focus
+        enabled: !isAuthPage && !!token // Only run query if not on auth page and token exists
     });
 };
-
 
 export const useSignup = () => {
     const queryClient = useQueryClient();
-    
-    return useMutation({
-        mutationFn: async (credentials: SignupCredentials) => {
-            const { data } = await authAxios.post(
-                `/auth/signup`,
-                credentials
-            );
-            return data as AuthResponse;
-        },
+
+    return useMutation<AuthResponse, Error, SignupCredentials>({
+        mutationFn: (credentials: SignupCredentials) => 
+            apiClient.post<AuthResponse>('/auth/signup', credentials)
+                .then(response => response.data),
         onSuccess: (data) => {
-            console.log(data);
-            const token = data.access_token || data?.token;
-            // Store the token
-            localStorage.setItem('access_token', token || '');
-            // Update the current user in the cache
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('user', JSON.stringify(data.user));
             queryClient.setQueryData(['currentUser'], data.user);
-        },
+        }
     });
 };
-
 
 export const useLogin = () => {
     const queryClient = useQueryClient();
-    
-    return useMutation({
-        mutationFn: async (credentials: LoginCredentials) => {
-            const { data } = await authAxios.post(
-                `/auth/login`,
-                credentials
-            );
-            return data as AuthResponse;
-        },
+
+    return useMutation<AuthResponse, Error, LoginCredentials>({
+        mutationFn: (credentials: LoginCredentials) => 
+            apiClient.post<AuthResponse>('/auth/login', credentials)
+                .then(response => response.data),
         onSuccess: (data) => {
-            console.log(data);
-            const token = data.access_token || data?.token;
-            // Store the token
-            localStorage.setItem('access_token', token || '');
+            localStorage.setItem('access_token', data.access_token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            // Update the current user in the cache
             queryClient.setQueryData(['currentUser'], data.user);
-        },
+        }
     });
 };
-
 
 export const useLogout = () => {
     const queryClient = useQueryClient();
-    
-    return useMutation({
-        mutationFn: async () => {
-            // Optional: call logout endpoint if you have one
-            try {
-                await authAxios.post(`/auth/logout`);
-            } catch (error) {
-                // Continue with local logout even if server logout fails
-                console.error('Server logout failed:', error);
-            }
-            return null;
-        },
+
+    return useMutation<void, Error, void>({
+        mutationFn: () => authAxios.post('/auth/logout').then(() => undefined),
         onSuccess: () => {
-            // Clear token
             localStorage.removeItem('access_token');
-            // Clear user from cache
+            localStorage.removeItem('user');
             queryClient.setQueryData(['currentUser'], null);
-            // Remove all queries from cache
             queryClient.clear();
-        },
+        }
     });
 };
-
 
 export const useRequestPasswordReset = () => {
     return useMutation({
@@ -147,7 +144,6 @@ export const useRequestPasswordReset = () => {
         },
     });
 };
-
 
 export const useResetPassword = () => {
     return useMutation({
@@ -185,5 +181,3 @@ export const useUpdatePassword = () => {
         },
     });
 };
-
-      

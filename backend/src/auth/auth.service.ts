@@ -22,7 +22,7 @@ export class AuthService {
 
   private generateToken(userId: number, email: string, role: string) {
     return this.jwtService.sign({
-      userId,
+      sub: userId,
       email,
       role,
     });
@@ -33,16 +33,12 @@ export class AuthService {
       const user = await this.usersService.createUser(createUserDto);
       const token = this.generateToken(user.id, user.email, user.role);
 
+      const { password, ...userWithoutPassword } = user;
+
       return {
         message: 'Signup successful',
-        token,
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-        },
+        access_token: token,
+        user: userWithoutPassword,
       };
     } catch (error) {
       if (error instanceof ConflictException) {
@@ -54,29 +50,62 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     try {
-      const { email, password } = loginDto;
-      const user = await this.usersService.getUserByEmail(email);
+      const user = await this.prisma.user.findUnique({
+        where: { email: loginDto.email },
+      });
 
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        loginDto.password,
+        user.password,
+      );
+
       if (!isPasswordValid) {
         throw new UnauthorizedException('Invalid credentials');
       }
 
       const token = this.generateToken(user.id, user.email, user.role);
+      const { password, ...userWithoutPassword } = user;
 
       return {
         message: 'Login successful',
-        token,
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          role: user.role,
-        },
+        access_token: token,
+        user: userWithoutPassword,
       };
     } catch (error) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Login failed');
+    }
+  }
+
+  async validateUser(email: string, password: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (user && (await bcrypt.compare(password, user.password))) {
+      const { password, ...result } = user;
+      return result;
+    }
+    return null;
+  }
+
+  async validateToken(token: string) {
+    try {
+      const payload = this.jwtService.verify(token);
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      return user;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
     }
   }
 }

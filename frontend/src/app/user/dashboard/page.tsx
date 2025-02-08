@@ -9,188 +9,229 @@ import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-
-const recentBills = [
-  {
-    icon: "/logos/kfc.png",
-    name: "KFC Cafe",
-    date: "10 Dec, 2023",
-    time: "09:30",
-    amount: 61.43,
-    progress: 75
-  },
-  {
-    icon: "/logos/mcdonalds.png",
-    name: "McD Sudirman",
-    date: "10 Dec, 2023",
-    time: "09:30",
-    amount: 61.43,
-    progress: 50
-  },
-]
+import { useWallet, useTransactions } from "@/hooks/use-wallet"
+import { useCurrentUser } from "@/hooks/use-auth"
+import { formatCurrency, formatDate } from "@/lib/utils"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import Link from "next/link"
 
 export default function MobileDashboardPage() {
   const router = useRouter()
+  const { data: user, isLoading: isLoadingUser } = useCurrentUser()
+  
+  // Enable real-time updates with refetchInterval
+  const { data: wallet, isLoading: isLoadingWallet, error: walletError } = useWallet({
+    enabled: !!user,
+  })
+
+  const { 
+    data: transactions, 
+    isLoading: isLoadingTransactions, 
+    error: transactionsError 
+  } = useTransactions(10, {
+    enabled: !!user,
+  })
+
+  const isLoading = isLoadingUser || isLoadingWallet || isLoadingTransactions
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (!user || walletError || transactionsError) {
+    return (
+      <div className="container mx-auto p-4">
+        <Alert variant="destructive">
+          <AlertDescription>
+            {walletError?.message || transactionsError?.message || "Failed to load dashboard data"}
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
+  // Calculate monthly spending if we have transactions
+  const currentMonth = new Date().getMonth();
+  const currentMonthTransactions = transactions?.filter(t => {
+    const transactionMonth = new Date(t.createdAt).getMonth();
+    return transactionMonth === currentMonth && t.type === 'DEBIT';
+  }) || [];
+  
+  const monthlySpending = currentMonthTransactions.reduce((total, t) => total + t.amount, 0);
+  const monthlyTarget = 5000; // This should come from user settings in the future
+  const spendingProgress = Math.min((monthlySpending / monthlyTarget) * 100, 100);
 
   return (
     <ScrollArea className="h-screen">
-      <div className="p-6 space-y-6 bg-background min-h-screen">
+      <div className="container p-4 pb-24 space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              className="p-0 rounded-full" 
-              onClick={() => router.push('/user/profile')}
-            >
-              <Avatar className="w-12 h-12 rounded-2xl overflow-hidden">
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>TA</AvatarFallback>
-              </Avatar>
-            </Button>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <Avatar>
+              <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.email || 'U'}`} />
+              <AvatarFallback>{user?.email?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+            </Avatar>
             <div>
-              <p className="text-sm text-muted-foreground">Good Morning,</p>
-              <h1 className="text-lg font-semibold text-foreground">Tanina 👋</h1>
+              <p className="text-sm text-muted-foreground">Welcome back,</p>
+              <p className="font-semibold">{user?.firstName || user?.email}</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon" className="rounded-full w-10 h-10 border-0 bg-muted hover:bg-muted/80">
-              <Search className="h-5 w-5 text-foreground" />
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="icon">
+              <Search className="h-5 w-5" />
             </Button>
-            <Button variant="outline" size="icon" className="rounded-full w-10 h-10 border-0 bg-muted hover:bg-muted/80">
-              <Bell className="h-5 w-5 text-foreground" />
+            <Button variant="ghost" size="icon">
+              <Bell className="h-5 w-5" />
             </Button>
           </div>
         </div>
 
         {/* Balance Card */}
-        <Card className="bg-primary text-primary-foreground rounded-3xl border-none shadow-sm">
+        <Card className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground">
           <CardContent className="pt-6 pb-6">
             <h2 className="text-sm text-primary-foreground/80 mb-2">Your Balance</h2>
             <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold">2,588.00 USD</p>
+              <p className="text-3xl font-bold">{formatCurrency(wallet?.balance || 0)}</p>
               <Button 
                 className="bg-background text-foreground hover:bg-accent rounded-xl"
                 onClick={() => router.push('/user/wallet/deposit')}
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 Top Up
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Stats Cards */}
-        <div className="flex gap-3 overflow-auto pb-2 -mx-6 px-6">
-          <Card className="shadow-sm border-0 rounded-2xl flex-shrink-0 w-[180px]">
-            <CardContent className="p-4">
-              <h3 className="text-sm font-medium text-foreground mb-1">Monthly Bills</h3>
-              <p className="text-2xl font-bold text-foreground">$135.00</p>
-              <p className="text-sm text-muted-foreground mt-1">Due: Feb 1</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm border-0 rounded-2xl flex-shrink-0 w-[180px]">
-            <CardContent className="p-4">
-              <h3 className="text-sm font-medium text-foreground mb-1">Savings Goal</h3>
-              <p className="text-2xl font-bold text-foreground">$3,890</p>
-              <p className="text-sm text-muted-foreground mt-1">Target: $5,000</p>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Quick Actions */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-4">
           <Button
             variant="ghost"
-            className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
+            className="flex flex-col items-center space-y-1 h-auto py-4"
             onClick={() => router.push('/user/wallet/transfer')}
           >
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <ArrowUpRight className="h-5 w-5 text-primary" />
+            <div className="rounded-full bg-primary/10 p-3">
+              <ArrowUpRight className="h-5 w-5" />
             </div>
-            <span className="text-sm text-foreground">Transfer</span>
+            <span className="text-xs">Send</span>
           </Button>
-
           <Button
             variant="ghost"
-            className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
-            onClick={() => router.push('/user/wallet/withdraw')}
+            className="flex flex-col items-center space-y-1 h-auto py-4"
+            onClick={() => router.push('/user/wallet/request')}
           >
-            <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
-              <Handshake className="h-5 w-5 text-secondary" />
+            <div className="rounded-full bg-primary/10 p-3">
+              <Handshake className="h-5 w-5" />
             </div>
-            <span className="text-sm text-foreground">Withdraw</span>
+            <span className="text-xs">Request</span>
           </Button>
-
           <Button
             variant="ghost"
-            className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
-            onClick={() => router.push('/user/wallet/payments')}
+            className="flex flex-col items-center space-y-1 h-auto py-4"
+            onClick={() => router.push('/user/bills')}
           >
-            <div className="w-10 h-10 rounded-lg bg-chart-3/10 flex items-center justify-center">
-              <Receipt className="h-5 w-5 text-chart-3" />
+            <div className="rounded-full bg-primary/10 p-3">
+              <Receipt className="h-5 w-5" />
             </div>
-            <span className="text-sm text-foreground">Payments</span>
+            <span className="text-xs">Bills</span>
           </Button>
-
           <Button
             variant="ghost"
-            className="h-24 bg-muted hover:bg-muted/80 rounded-2xl flex flex-col items-center justify-center gap-2 p-0 border-0"
-            onClick={() => router.push('/user/wallet/merchant')}
+            className="flex flex-col items-center space-y-1 h-auto py-4"
+            onClick={() => router.push('/user/more')}
           >
-            <div className="w-10 h-10 rounded-lg bg-chart-4/10 flex items-center justify-center">
-              <MoreHorizontal className="h-5 w-5 text-chart-4" />
+            <div className="rounded-full bg-primary/10 p-3">
+              <MoreHorizontal className="h-5 w-5" />
             </div>
-            <span className="text-sm text-foreground">Merchant</span>
+            <span className="text-xs">More</span>
           </Button>
         </div>
 
-        {/* Recent Bills */}
+        {/* Monthly Spending */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Recent Bills</h2>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="rounded-full hover:bg-muted/80 shadow-sm border border-border/5"
-              onClick={() => router.push('/user/bills')}
-            >
-              <ArrowRight className="h-4 w-4" />
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-semibold">Monthly Spending</h2>
+            <p className="text-sm text-muted-foreground">
+              Target: {formatCurrency(monthlyTarget)}
+            </p>
+          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <p className="text-sm font-medium">
+                    {formatCurrency(monthlySpending)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {spendingProgress.toFixed(0)}%
+                  </p>
+                </div>
+                <Progress value={spendingProgress} className="h-2" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-semibold">Recent Activity</h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/user/transactions" className="flex items-center">
+                View All
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
             </Button>
           </div>
 
           <div className="space-y-4">
-            {recentBills.map((bill) => (
-              <Card key={bill.name} className="shadow-sm border-0 rounded-2xl">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 flex-1">
-                      <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center overflow-hidden">
-                        <Image src={bill.icon} alt={bill.name} width={24} height={24} className="w-6 h-6 rounded-lg" />
+            {transactions && transactions.length > 0 ? (
+              transactions.map((transaction) => (
+                <Card key={transaction.id} className="bg-card/50">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-start space-x-4">
+                        <div className="rounded-full p-2 bg-primary/10">
+                          {transaction.type === 'CREDIT' ? (
+                            <ArrowUpRight className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <ArrowUpRight className="h-4 w-4 text-red-600 transform rotate-180" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {transaction.description || (
+                              transaction.type === 'CREDIT' ? 'Money Received' : 'Money Sent'
+                            )}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {formatDate(transaction.createdAt)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-foreground">{bill.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {bill.date} | {bill.time}
-                        </p>
-                      </div>
+                      <p className={`font-medium ${
+                        transaction.type === 'CREDIT' ? "text-green-600" : "text-red-600"
+                      }`}>
+                        {transaction.type === 'CREDIT' 
+                          ? `+${formatCurrency(transaction.amount)}`
+                          : `-${formatCurrency(transaction.amount)}`}
+                      </p>
                     </div>
-
-                    <div className="text-right">
-                      <p className="font-medium text-foreground">${bill.amount}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Progress
-                          value={bill.progress}
-                          className="w-20 h-2 rounded-full"
-                        />
-                        <span className="text-sm text-primary">{bill.progress}%</span>
-                      </div>
-                    </div>
-                  </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-center text-muted-foreground">
+                  No transactions yet
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </div>
       </div>
