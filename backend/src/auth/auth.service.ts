@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -12,11 +17,11 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
   ) {}
 
   private generateToken(userId: number, email: string, role: string) {
-    return this.jwtService.sign({ 
+    return this.jwtService.sign({
       userId,
       email,
       role,
@@ -27,7 +32,7 @@ export class AuthService {
     try {
       const user = await this.usersService.createUser(createUserDto);
       const token = this.generateToken(user.id, user.email, user.role);
-      
+
       return {
         message: 'Signup successful',
         token,
