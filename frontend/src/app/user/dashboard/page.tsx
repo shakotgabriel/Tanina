@@ -15,9 +15,11 @@ import { formatCurrency, formatDate } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
+import { BalanceCard } from "@/components/wallet/BalanceCard"
+import { QuickActions } from "@/components/dashboard/QuickActions"
 
 export default function MobileDashboardPage() {
-  const router = useRouter()
+ 
   const { data: user, isLoading: isLoadingUser } = useCurrentUser()
   // Enable real-time updates with refetchInterval
   const { data: wallet, isLoading: isLoadingWallet, error: walletError } = useWallet({
@@ -90,66 +92,9 @@ export default function MobileDashboardPage() {
           </div>
         </div>
 
-        {/* Balance Card */}
-        <Card className="bg-gradient-to-br from-primary to-primary-foreground text-primary-foreground">
-          <CardContent className="pt-6 pb-6">
-            <h2 className="text-sm text-primary-foreground/80 mb-2">Your Balance</h2>
-            <div className="flex items-center justify-between">
-              <p className="text-3xl font-bold">{formatCurrency(wallet?.balance || 0)}</p>
-              <Button 
-                className="bg-background text-foreground hover:bg-accent rounded-xl"
-                onClick={() => router.push('/user/wallet/deposit')}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Top Up
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-4 gap-4">
-          <Button
-            variant="ghost"
-            className="flex flex-col items-center space-y-1 h-auto py-4"
-            onClick={() => router.push('/user/wallet/transfer')}
-          >
-            <div className="rounded-full bg-primary/10 p-3">
-              <ArrowUpRight className="h-5 w-5" />
-            </div>
-            <span className="text-xs">Send</span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="flex flex-col items-center space-y-1 h-auto py-4"
-            onClick={() => router.push('/user/wallet/request')}
-          >
-            <div className="rounded-full bg-primary/10 p-3">
-              <Handshake className="h-5 w-5" />
-            </div>
-            <span className="text-xs">Request</span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="flex flex-col items-center space-y-1 h-auto py-4"
-            onClick={() => router.push('/user/bills')}
-          >
-            <div className="rounded-full bg-primary/10 p-3">
-              <Receipt className="h-5 w-5" />
-            </div>
-            <span className="text-xs">Bills</span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="flex flex-col items-center space-y-1 h-auto py-4"
-            onClick={() => router.push('/user/more')}
-          >
-            <div className="rounded-full bg-primary/10 p-3">
-              <MoreHorizontal className="h-5 w-5" />
-            </div>
-            <span className="text-xs">More</span>
-          </Button>
-        </div>
+     
+        <BalanceCard balance={wallet?.balance || 0} />
+        <QuickActions />
 
         {/* Monthly Spending */}
         <div className="space-y-4">
