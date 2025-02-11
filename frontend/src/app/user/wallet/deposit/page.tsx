@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, Wallet, Phone, Building2, CreditCard } from "lucide-react"
 import { useRouter } from 'next/navigation'
+import { useCurrentUser } from "@/hooks/use-auth"
 
 const depositMethods = [
   {
@@ -49,6 +50,7 @@ export default function DepositPage() {
   const [method, setMethod] = useState('')
   const [amount, setAmount] = useState('')
   const [status, setStatus] = useState<'idle' | 'processing'>('idle')
+  const { data: user, isLoading: isLoadingUser } = useCurrentUser()
 
   const handleDeposit = async () => {
     setStatus('processing')

@@ -23,7 +23,6 @@ export interface SignupCredentials {
     lastName: string;
     email: string;
     password: string;
-    phoneNumber: string;
 }
 
 export interface LoginCredentials {

@@ -19,7 +19,6 @@ import Link from "next/link"
 export default function MobileDashboardPage() {
   const router = useRouter()
   const { data: user, isLoading: isLoadingUser } = useCurrentUser()
-  
   // Enable real-time updates with refetchInterval
   const { data: wallet, isLoading: isLoadingWallet, error: walletError } = useWallet({
     enabled: !!user,
