@@ -1,10 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Controller, Post, UseGuards, Body, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SendMoneyDto } from './dtos/send-money.dto';
 import { CurrencyExchangeDto } from './dtos/currency-exchange.dto';
-import { AccountTransactionData, TransferData } from './types/transaction.types';
+import {
+  AccountTransactionData,
+  TransferData,
+} from './types/transaction.types';
 
 @ApiTags('transactions')
 @ApiBearerAuth()
@@ -12,20 +21,6 @@ import { AccountTransactionData, TransferData } from './types/transaction.types'
 @UseGuards(JwtAuthGuard)
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
-
-  @Post('transfer')
-  @ApiOperation({ summary: 'Transfer money between accounts' })
-  @ApiResponse({ status: 201, description: 'Transfer successful' })
-  @ApiResponse({ status: 400, description: 'Invalid input or insufficient funds' })
-  @ApiResponse({ status: 404, description: 'Account not found' })
-  async transfer(@Body() transferData: TransferData) {
-    return this.transactionsService.transfer(
-      transferData.fromAccountId,
-      transferData.toAccountId,
-      transferData.amount,
-      transferData.description,
-    );
-  }
 
   @Post('deposit')
   @ApiOperation({ summary: 'Deposit money into an account' })
@@ -43,7 +38,10 @@ export class TransactionsController {
   @Post('withdraw')
   @ApiOperation({ summary: 'Withdraw money from an account' })
   @ApiResponse({ status: 201, description: 'Withdrawal successful' })
-  @ApiResponse({ status: 400, description: 'Invalid input or insufficient funds' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input or insufficient funds',
+  })
   @ApiResponse({ status: 404, description: 'Account not found' })
   async withdraw(@Body() withdrawalData: AccountTransactionData) {
     return this.transactionsService.withdraw(
@@ -56,7 +54,10 @@ export class TransactionsController {
   @Post('send-money')
   @ApiOperation({ summary: 'Send money to another account' })
   @ApiResponse({ status: 201, description: 'Money sent successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid input or insufficient funds' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input or insufficient funds',
+  })
   @ApiResponse({ status: 404, description: 'Account not found' })
   async sendMoney(@Body() dto: SendMoneyDto) {
     return this.transactionsService.sendMoney(dto);
@@ -65,7 +66,10 @@ export class TransactionsController {
   @Post('exchange-currency')
   @ApiOperation({ summary: 'Convert money between different currency wallets' })
   @ApiResponse({ status: 201, description: 'Currency exchange successful' })
-  @ApiResponse({ status: 400, description: 'Invalid input or insufficient funds' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input or insufficient funds',
+  })
   @ApiResponse({ status: 404, description: 'Wallet not found' })
   async exchangeCurrency(@Req() req: any, @Body() dto: CurrencyExchangeDto) {
     return this.transactionsService.convertCurrency(

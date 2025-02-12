@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Account, CurrencyType, Wallet } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -7,10 +12,13 @@ import { Decimal } from '@prisma/client/runtime/library';
 export class TransactionValidatorService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async validateAccountBalance(accountId: number, amount: number): Promise<Account> {
+  async validateAccountBalance(
+    accountId: number,
+    amount: number,
+  ): Promise<Account> {
     const account = await this.prisma.account.findUnique({
       where: { id: accountId },
-      include: { balance: true }
+      include: { balance: true },
     });
 
     if (!account || !account.isActive) {
@@ -25,24 +33,24 @@ export class TransactionValidatorService {
   }
 
   async validateAccountWallet(
-    accountId: number, 
+    accountId: number,
     currency: CurrencyType,
     requireBalance = false,
-    minBalance?: number
+    minBalance?: number,
   ): Promise<{ account: Account; wallet: Wallet }> {
     const account = await this.prisma.account.findUnique({
       where: { id: accountId },
-      include: { 
+      include: {
         balance: true,
         wallets: {
-          where: { 
+          where: {
             isActive: true,
-            currency
+            currency,
           },
           take: 1,
-          include: { balance: true }
-        }
-      }
+          include: { balance: true },
+        },
+      },
     });
 
     if (!account || !account.isActive) {
@@ -51,10 +59,16 @@ export class TransactionValidatorService {
 
     const wallet = account.wallets[0];
     if (!wallet) {
-      throw new BadRequestException(`No active ${currency} wallet found for account`);
+      throw new BadRequestException(
+        `No active ${currency} wallet found for account`,
+      );
     }
 
-    if (requireBalance && (!wallet.balance || wallet.balance.available.toNumber() < (minBalance ?? 0))) {
+    if (
+      requireBalance &&
+      (!wallet.balance ||
+        wallet.balance.available.toNumber() < (minBalance ?? 0))
+    ) {
       throw new BadRequestException('Insufficient wallet balance');
     }
 
@@ -65,11 +79,16 @@ export class TransactionValidatorService {
     fromAccountId: number,
     toAccountId: number,
     amount: number,
-    currency: CurrencyType
+    currency: CurrencyType,
   ) {
     // Validate source account and wallet
-    const source = await this.validateAccountWallet(fromAccountId, currency, true, amount);
-    
+    const source = await this.validateAccountWallet(
+      fromAccountId,
+      currency,
+      true,
+      amount,
+    );
+
     // Validate destination account and wallet
     const destination = await this.validateAccountWallet(toAccountId, currency);
 
@@ -77,25 +96,25 @@ export class TransactionValidatorService {
       sourceAccount: source.account,
       sourceWallet: source.wallet,
       destinationAccount: destination.account,
-      destinationWallet: destination.wallet
+      destinationWallet: destination.wallet,
     };
   }
 
   async validateSendMoneyAccounts(
     senderAccountNumber: string,
     receiverAccountNumber: string,
-    amount: number
+    amount: number,
   ) {
     const sender = await this.prisma.account.findUnique({
       where: { accountNumber: senderAccountNumber },
-      include: { 
+      include: {
         balance: true,
         wallets: {
           where: { isActive: true },
           take: 1,
-          include: { balance: true }
-        }
-      }
+          include: { balance: true },
+        },
+      },
     });
 
     if (!sender || !sender.isActive) {
@@ -108,13 +127,13 @@ export class TransactionValidatorService {
 
     const receiver = await this.prisma.account.findUnique({
       where: { accountNumber: receiverAccountNumber },
-      include: { 
+      include: {
         wallets: {
           where: { isActive: true },
           take: 1,
-          include: { balance: true }
-        }
-      }
+          include: { balance: true },
+        },
+      },
     });
 
     if (!receiver || !receiver.isActive) {
@@ -125,7 +144,7 @@ export class TransactionValidatorService {
       sender,
       senderWallet: sender.wallets[0],
       receiver,
-      receiverWallet: receiver.wallets[0]
+      receiverWallet: receiver.wallets[0],
     };
   }
 
@@ -133,55 +152,66 @@ export class TransactionValidatorService {
     userId: number,
     amount: number,
     fromCurrency: CurrencyType,
-    toCurrency: CurrencyType
+    toCurrency: CurrencyType,
   ) {
     if (fromCurrency === toCurrency) {
-      throw new BadRequestException('Source and target currencies must be different');
+      throw new BadRequestException(
+        'Source and target currencies must be different',
+      );
     }
 
     // Get user's account with both currency wallets
     const account = await this.prisma.account.findFirst({
-      where: { 
+      where: {
         userId,
-        isActive: true
+        isActive: true,
       },
       include: {
         wallets: {
           where: {
             isActive: true,
             currency: {
-              in: [fromCurrency, toCurrency]
-            }
+              in: [fromCurrency, toCurrency],
+            },
           },
           include: {
-            balance: true
-          }
-        }
-      }
+            balance: true,
+          },
+        },
+      },
     });
 
     if (!account) {
       throw new NotFoundException('No active account found for user');
     }
 
-    const sourceWallet = account.wallets.find(w => w.currency === fromCurrency);
+    const sourceWallet = account.wallets.find(
+      (w) => w.currency === fromCurrency,
+    );
     if (!sourceWallet) {
-      throw new BadRequestException(`No active wallet found for ${fromCurrency}`);
+      throw new BadRequestException(
+        `No active wallet found for ${fromCurrency}`,
+      );
     }
 
-    const targetWallet = account.wallets.find(w => w.currency === toCurrency);
+    const targetWallet = account.wallets.find((w) => w.currency === toCurrency);
     if (!targetWallet) {
       throw new BadRequestException(`No active wallet found for ${toCurrency}`);
     }
 
-    if (!sourceWallet.balance || sourceWallet.balance.available.toNumber() < amount) {
-      throw new BadRequestException(`Insufficient balance in ${fromCurrency} wallet`);
+    if (
+      !sourceWallet.balance ||
+      sourceWallet.balance.available.toNumber() < amount
+    ) {
+      throw new BadRequestException(
+        `Insufficient balance in ${fromCurrency} wallet`,
+      );
     }
 
     return {
       account,
       sourceWallet,
-      targetWallet
+      targetWallet,
     };
   }
 }

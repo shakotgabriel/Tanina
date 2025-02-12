@@ -9,7 +9,12 @@ import { TransactionValidatorService } from './services/transaction-validator.se
 @Module({
   imports: [PrismaModule],
   controllers: [TransactionsController],
-  providers: [TransactionsService, ValidateTransactionHook, TransactionValidatorService, ExchangeRateService],
+  providers: [
+    TransactionsService,
+    ValidateTransactionHook,
+    TransactionValidatorService,
+    ExchangeRateService,
+  ],
   exports: [TransactionsService],
 })
 export class TransactionsModule {}

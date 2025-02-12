@@ -1,4 +1,10 @@
-import { createParamDecorator, ExecutionContext, BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  createParamDecorator,
+  ExecutionContext,
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CurrencyType } from '@prisma/client';
 
@@ -48,16 +54,20 @@ export const ValidateWithdrawal = createParamDecorator(
 export class ValidateTransactionHook {
   constructor(private readonly prisma: PrismaService) {}
 
-  async validateSendMoney(senderAccountNumber: string, receiverAccountNumber: string, amount: number) {
-    const sender = await this.prisma.account.findUnique({ 
+  async validateSendMoney(
+    senderAccountNumber: string,
+    receiverAccountNumber: string,
+    amount: number,
+  ) {
+    const sender = await this.prisma.account.findUnique({
       where: { accountNumber: senderAccountNumber },
-      include: { balance: true }
+      include: { balance: true },
     });
     if (!sender) throw new NotFoundException('Sender account not found');
 
-    const receiver = await this.prisma.account.findUnique({ 
+    const receiver = await this.prisma.account.findUnique({
       where: { accountNumber: receiverAccountNumber },
-      include: { balance: true }
+      include: { balance: true },
     });
     if (!receiver) throw new NotFoundException('Receiver account not found');
 
@@ -75,46 +85,55 @@ export class ValidateTransactionHook {
     toCurrency: CurrencyType,
   ) {
     if (fromCurrency === toCurrency) {
-      throw new BadRequestException('Source and target currencies must be different');
+      throw new BadRequestException(
+        'Source and target currencies must be different',
+      );
     }
 
     // Get user's account with both currency wallets
     const account = await this.prisma.account.findFirst({
-      where: { 
+      where: {
         userId,
-        isActive: true
+        isActive: true,
       },
       include: {
         wallets: {
           where: {
             isActive: true,
             currency: {
-              in: [fromCurrency, toCurrency]
-            }
+              in: [fromCurrency, toCurrency],
+            },
           },
           include: {
-            balance: true
-          }
-        }
-      }
+            balance: true,
+          },
+        },
+      },
     });
 
     if (!account) {
       throw new NotFoundException('Active account not found for user');
     }
 
-    const sourceWallet = account.wallets.find(w => w.currency === fromCurrency);
+    const sourceWallet = account.wallets.find(
+      (w) => w.currency === fromCurrency,
+    );
     if (!sourceWallet) {
       throw new BadRequestException(`No active ${fromCurrency} wallet found`);
     }
 
-    const targetWallet = account.wallets.find(w => w.currency === toCurrency);
+    const targetWallet = account.wallets.find((w) => w.currency === toCurrency);
     if (!targetWallet) {
       throw new BadRequestException(`No active ${toCurrency} wallet found`);
     }
 
-    if (!sourceWallet.balance || sourceWallet.balance.available.toNumber() < amount) {
-      throw new BadRequestException(`Insufficient funds in ${fromCurrency} wallet`);
+    if (
+      !sourceWallet.balance ||
+      sourceWallet.balance.available.toNumber() < amount
+    ) {
+      throw new BadRequestException(
+        `Insufficient funds in ${fromCurrency} wallet`,
+      );
     }
 
     return {
