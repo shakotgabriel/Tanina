@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException, ConflictException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { User, AccountType, CurrencyType, AccountStatus, BalanceType } from '@prisma/client';
+import { UserDTO } from '@tanina/types/users/users';
+import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -45,7 +46,6 @@ export class UsersService {
     
     try {
       return await this.prisma.$transaction(async (prisma) => {
-        // Create the user
         const user = await prisma.user.create({
           data: {
             ...createUserDto,
@@ -115,7 +115,7 @@ export class UsersService {
     return user;
   }
 
-  async updateUser(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+  async updateUser(id: number, updateUserDto: UserDTO): Promise<User> {
     await this.findUserOrThrow(id);
 
     const data = { ...updateUserDto };
